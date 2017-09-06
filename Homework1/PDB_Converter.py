@@ -27,7 +27,20 @@ def calc_bond_angle(r1, r2, r3):
 
 
 def calc_dihedral(r1, r2, r3, r4):
-    pass
+    l1 = r2 - r1
+    l2 = r3 - r2
+    l3 = r4 - r3
+    l1xl2 = np.cross(l1, l2)
+    l2xl3 = np.cross(l2, l3)
+
+    if np.dot(l1xl2, l3) < 0:
+        sign = -1
+    else:
+        sign = 1
+
+    return sign * np.degrees(np.arccos(np.dot(l1xl2, l2xl3) /
+                                       (np.sqrt(l1xl2[0]**2 + l1xl2[1]**2 + l1xl2[2]**2) *
+                                        np.sqrt(l2xl3[0]**2 + l2xl3[1]**2 + l2xl3[2]**2))))
 
 
 def main():
@@ -78,19 +91,45 @@ def main():
         theta = calc_bond_angle(atom0[3], atom1[3], atom2[3])
         angles.append([atom1[0], theta])
 
-    t1 = open(TABLE1_OUTPUT, 'w')
-    t1.write('Table 1: Bond Length and Supplemental Bond Angle Theta\n')
-    t1.write('Index,Atom,Bond_Length,Theta\n')
-    for n in range(0, len(bonds)):
-        t1.write(str(bonds[n][0]) + ',' +
-                 str(all_atoms[n][1]) + ',' +
-                 str(bonds[n][1]) + ',' +
-                 str(angles[n][1]) + '\n')
+    # t1 = open(TABLE1_OUTPUT, 'w')
+    # t1.write('Table 1: Bond Length and Supplemental Bond Angle Theta\n')
+    # t1.write('Index,Atom,Bond_Length,Theta\n')
+    # for n in range(0, len(bonds)):
+    #     t1.write(str(bonds[n][0]) + ',' +
+    #              str(all_atoms[n][1]) + ',' +
+    #              str(bonds[n][1]) + ',' +
+    #              str(angles[n][1]) + '\n')
 
     # TODO: Make the table columns a consistent width using spaces
 
-    # Calc Phi, Psi, Omega
     # Build Table 2
+    # Calc Phi, Psi, Omega
+    print('phi psi omega')
+    for n in range(1, len(all_atoms), 3):
+        try:
+            atom0 = all_atoms[n - 2]
+            atom1 = all_atoms[n - 1]
+            atom2 = all_atoms[n]
+            atom3 = all_atoms[n + 1]
+            atom4 = all_atoms[n + 2]
+            atom5 = all_atoms[n + 3]
+        except IndexError:
+            pass
+
+        if n == 1:
+            phi = 'N/A'
+            psi = calc_dihedral(atom1[3], atom2[3], atom3[3], atom4[3])
+            omega = calc_dihedral(atom2[3], atom3[3], atom4[3], atom5[3])
+        elif n == len(all_atoms):
+            phi = calc_dihedral(atom2[3], atom3[3], atom4[3], atom5[3])
+            psi = 'N/A'
+            omega = 'N/A'
+        else:
+            phi = calc_dihedral(atom0[3], atom1[3], atom2[3], atom3[3])
+            psi = calc_dihedral(atom1[3], atom2[3], atom3[3], atom4[3])
+            omega = calc_dihedral(atom2[3], atom3[3], atom4[3], atom5[3])
+
+        print(phi, psi, omega)
 
 # Table 1: Index, Atom, Bond Length, Bond Angle (theta)
 # Table 2: Index, Residue, Phi, Psi, Omega
