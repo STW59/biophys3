@@ -1,12 +1,17 @@
+import matplotlib.pyplot as plot
 import numpy as np
 import random
 import time
 
-CHAIN_LENGTH = 10
 
-
-def generate_lattice():
+def generate_lattice(chain_length):
+    """
+    Generates a lattice model given a starting chain length.
+    :param chain_length: integer value for the length of the chain
+    :return: list of residue coordinates and elapsed process time as [chain_length, [coordinates], time]
+    """
     start_time = time.clock()  # Start performance timer
+
     residue_loc = []
 
     # Residue 0 set to (0, 0)
@@ -18,19 +23,21 @@ def generate_lattice():
     if loc == 0:
         while [x_new, y_new] in residue_loc:  # Check for self-intersections
             x_new = random.randint(-1, 1)  # Residue 1 is changed in x
+
     else:
         while [x_new, y_new] in residue_loc:
             y_new = random.randint(-1, 1)  # Residue 1 is changed in y
+
     residue_loc.append([x_new, y_new])
 
-    # Iterate residues 2 to CHAIN_LENGTH
-    for residue in range(2, CHAIN_LENGTH):
+    # Iterate residues 2 to chain_length
+    for residue in range(2, chain_length):
         iteration_count = 0
         x_last = residue_loc[residue - 1][0]
         y_last = residue_loc[residue - 1][1]
 
         while [x_new, y_new] in residue_loc:  # Check for self-intersections
-            if iteration_count > 1000 * CHAIN_LENGTH:  # Terminate the calculations if it always self-intersects
+            if iteration_count > 10000 * chain_length:  # Terminate the calculations if it always self-intersects
                 print('Failed to find non-intersecting solution.')
                 break
 
@@ -41,14 +48,25 @@ def generate_lattice():
             iteration_count += 1
         residue_loc.append([x_new, y_new])
 
-    print(residue_loc)
-
     end_time = time.clock()  # End performance timer
-    print('Elapsed time = {} seconds'.format(end_time - start_time))  # Print process time
+    return [chain_length, residue_loc, end_time - start_time]
 
 
 def main():
-    generate_lattice()
+    chain_length_list = []
+    chain_length_x = []
+    chain_length_y = []
+    for chain_length in range(4, 17):
+        i_chain_length_list = []
+        for i in range(0, 100):
+            chain = generate_lattice(chain_length)
+            i_chain_length_list.append(chain[2])
+            chain_length_x.append(chain_length)
+            chain_length_y.append(chain[2])
+        chain_length_list.append([chain_length, i_chain_length_list])
+    print(chain_length_list)
+    plot.scatter(chain_length_x, chain_length_y)
+    plot.show()
 
 
 main()
