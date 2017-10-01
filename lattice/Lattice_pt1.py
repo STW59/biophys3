@@ -1,4 +1,3 @@
-import matplotlib.pyplot as plot
 import numpy as np
 import random
 import time
@@ -53,20 +52,8 @@ def generate_lattice(chain_length):
 
 
 def main():
-    chain_length_list = []
-    chain_length_x = []
-    chain_length_y = []
-    for chain_length in range(4, 17):
-        i_chain_length_list = []
-        for i in range(0, 100):
-            chain = generate_lattice(chain_length)
-            i_chain_length_list.append(chain[2])
-            chain_length_x.append(chain_length)
-            chain_length_y.append(chain[2])
-        chain_length_list.append([chain_length, i_chain_length_list])
-    print(chain_length_list)
-    plot.scatter(chain_length_x, chain_length_y)
-    plot.show()
+    chain = generate_lattice(4)
+    print(chain[2])
 
 
 main()
