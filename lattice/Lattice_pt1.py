@@ -1,5 +1,3 @@
-import numpy as np
-import random
 import time
 
 
@@ -11,49 +9,65 @@ def generate_lattice(chain_length):
     """
     start_time = time.clock()  # Start performance timer
 
-    residue_loc = []
+    x_step = {'u': 0, 'r': 1, 'd': 0, 'l': -1}
+    y_step = {'u': 1, 'r': 0, 'd': -1, 'l': 0}
+    next_step = {'u': 'r', 'r': 'd', 'd': 'l', 'l': 'u'}
+    opposite_pos = {'u': 'd', 'd': 'u', 'r': 'l', 'l': 'r'}
+    n = chain_length - 2
+    conformation = ['u' for i in range(n + 1)]
+    first_r = n
+    n_count = 0
 
-    # Residue 0 set to (0, 0)
-    residue_loc.append([0, 0])
+    while True:
+        x = 0
+        y = 0
+        j = 0
 
-    # Residue 1 is in random location adjacent to the origin
-    loc = random.randint(0, 1)
-    x_new, y_new = 0, 0
-    if loc == 0:
-        while [x_new, y_new] in residue_loc:  # Check for self-intersections
-            x_new = random.randint(-1, 1)  # Residue 1 is changed in x
+        residue_loc = {(x, y): j}
+        residue_coords = [(x, y)]
 
-    else:
-        while [x_new, y_new] in residue_loc:
-            y_new = random.randint(-1, 1)  # Residue 1 is changed in y
-
-    residue_loc.append([x_new, y_new])
-
-    # Iterate residues 2 to chain_length
-    for residue in range(2, chain_length):
-        iteration_count = 0
-        x_last = residue_loc[residue - 1][0]
-        y_last = residue_loc[residue - 1][1]
-
-        while [x_new, y_new] in residue_loc:  # Check for self-intersections
-            if iteration_count > 10000 * chain_length:  # Terminate the calculations if it always self-intersects
-                print('Failed to find non-intersecting solution.')
+        for c in conformation:
+            x += x_step[c]
+            y += y_step[c]
+            coord = (x, y)
+            if coord in residue_loc:
+                for k in range(j + 1, n + 1):
+                    conformation[k] = 'u'
+                conformation[j] = next_step[conformation[j]]
+                while conformation[j] == 'u':
+                    j -= 1
+                    conformation[j] = next_step[conformation[j]]
+                if j == first_r and conformation[j] not in ['r', 'u']:
+                    first_r -= 1
+                    conformation[first_r] = 'r'
+                    for k in range(j, n + 1):
+                        conformation[k] = 'u'
                 break
+            j += 1
+            residue_loc[coord] = j
+            residue_coords.append(coord)
+        else:
+            i = n
+            conformation[i] = next_step[conformation[i]]
+            while conformation[i] == 'u':
+                i -= 1
 
-            angle = random.randint(0, 3)
-            x_new = x_last + int(np.cos(angle * (np.pi/2)))
-            y_new = y_last + int(np.sin(angle * (np.pi/2)))
-
-            iteration_count += 1
-        residue_loc.append([x_new, y_new])
+            if i == first_r and conformation[i] not in ['r', 'u']:
+                first_r -= 1
+                conformation[first_r] = 'r'
+                for j in range(i, n + 1):
+                    conformation[j] = 'u'
+            print(residue_coords)
+        if first_r == 0:
+            break
 
     end_time = time.clock()  # End performance timer
-    return [chain_length, residue_loc, end_time - start_time]
+    return end_time - start_time
 
 
 def main():
     chain = generate_lattice(4)
-    print(chain[2])
+    print(chain)
 
 
 main()
