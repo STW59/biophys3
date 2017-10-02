@@ -149,7 +149,7 @@ def main():
         dihedrals.append([index, atom2[2], phi, psi, omega])
         index += 1
 
-# Table 2: Index, Residue, Phi, Psi, Omega
+    # Table 2: Index, Residue, Phi, Psi, Omega
     t2 = open(TABLE2_OUTPUT, 'w')
     t2.write('Table 2: The Three Dihedrals\n')
     t2.write('Index  Residue  Phi       Psi       Omega\n')

@@ -28,18 +28,12 @@ def generate_lattice(chain_length):
             x += x_step[c]
             y += y_step[c]
             coord = (x, y)
-            if coord in residue_loc:  # Look for an intersection
-                for k in range(j + 1, n + 1):  # Try again at that step
-                    conformation[k] = 'u'
-                conformation[j] = next_step[conformation[j]]
-                while conformation[j] == 'u':
-                    j -= 1
-                    conformation[j] = next_step[conformation[j]]
-                if j == first_r and conformation[j] not in ['r', 'u']:
-                    first_r -= 1
-                    conformation[first_r] = 'r'
-                    for k in range(j, n + 1):
-                        conformation[k] = 'u'
+
+            if coord in residue_loc:
+                i = n
+                conformation[i] = next_step[conformation[i]]
+                while conformation[i] is 'u':
+                    i -= 1
                 break
             j += 1
             residue_loc[coord] = j
@@ -47,20 +41,15 @@ def generate_lattice(chain_length):
         else:
             i = n
             conformation[i] = next_step[conformation[i]]
-            while conformation[i] == 'u':
+            while conformation[i] is 'u':
                 i -= 1
                 conformation[i] = next_step[conformation[i]]
 
-            if i == first_r and conformation[i] not in ['r', 'u']:
-                first_r -= 1
-                conformation[first_r] = 'r'
-                for j in range(i, n + 1):
-                    conformation[j] = 'u'
             print(residue_coords)
-            if first_r == 0:
+            if first_r is 0:
                 break
 
-    end_time = time.clock()  # End performance timer
+    end_time = time.clock()
     return end_time - start_time
 
 
