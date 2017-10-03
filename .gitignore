@@ -1,3 +1,6 @@
 
 /.idea/
 /lattice/*.dat
+/lattice/STW59_Lattice_Output.txt
+lattice/__pycache__/
+test/

@@ -4,10 +4,11 @@ import pickle
 
 
 def generate_lattice(length):
-    print('length = {}'.format(length))
-    chain = lat.LatticeGen.generate_lattice(length)
-    print('time = {:.9f} seconds'.format(chain))
-    print()
+    return lat.LatticeGen.generate_lattice(length)
+
+
+def calc_gyration(length):
+    return gyr.Gyration.radius_calc(length)
 
 
 def read_data_file(length):
@@ -25,13 +26,14 @@ def read_data_file(length):
 
 
 def main():
-    for length in range(4, 5):
-        generate_lattice(length)
+    f = open('STW59_Lattice_Output.txt', 'w')
+    f.write('length,time,min_radius,avg_radius\n')
+    for length in range(4, 17):
+        lattice = generate_lattice(length)
         # read_data_file(length)
-        gyr.Gyration.radius_calc(length)
+        gyration = calc_gyration(length)
 
-        # TODO: Run from range(4, 17)
-        # TODO: Output all data as a csv .txt file
+        f.write('{},{},{},{}\n'.format(length, lattice, gyration[0], gyration[1]))
 
 
 main()
