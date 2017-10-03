@@ -16,7 +16,7 @@ class Gyration:
         y_sum = 0
         radius_sum = 0
         avg_radius_sum = 0
-        min_radius = 1000000
+        min_radius = 1000000.0
         conformations = 0
 
         try:
