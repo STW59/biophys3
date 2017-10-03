@@ -27,13 +27,15 @@ def read_data_file(length):
 
 def main():
     f = open('STW59_Lattice_Output.txt', 'w')
-    f.write('length,time,min_radius,avg_radius\n')
-    for length in range(4, 17):
+    f.write('length,conformations,time,min_radius,avg_radius\n')
+    for length in range(4, 21):
         lattice = generate_lattice(length)
         # read_data_file(length)
         gyration = calc_gyration(length)
 
-        f.write('{},{},{},{}\n'.format(length, lattice, gyration[0], gyration[1]))
+        f.write('{},{},{},{},{}\n'.format(length, lattice[1], lattice[0], gyration[0], gyration[1]))
+        print('{},{},{},{},{}\n'.format(length, lattice[1], lattice[0], gyration[0], gyration[1]))
+    f.close()
 
 
 main()

@@ -29,6 +29,7 @@ class LatticeGen:
         next_step = {'u': 'r', 'r': 'd', 'd': 'l', 'l': 'u'}
         n = chain_length - 2  # Index of last bond
         conformation = ['u' for i in range(n + 1)]
+        conformation_count = 0
         first_r = n
 
         export_file = open('lattice_{}.dat'.format(chain_length), 'wb')
@@ -74,10 +75,11 @@ class LatticeGen:
                     for j in range(i, n + 1):
                         conformation[j] = 'u'
                 pickle.dump(residue_coords, export_file)
+                conformation_count += 1
 
                 if first_r == 0:
                     break
 
         end_time = time.clock()  # End performance timer
         export_file.close()
-        return end_time - start_time
+        return end_time - start_time, conformation_count
