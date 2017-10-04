@@ -1,5 +1,5 @@
 import gyration as gyr
-import latticegen2 as lat2
+import latticegen as lat
 import pickle
 import time
 
@@ -7,7 +7,7 @@ CHAIN_LENGTH = 16
 
 
 def generate_lattice(length):
-    return lat2.LatticeGen.generate_lattice(length)
+    return lat.LatticeGen.generate_lattice(length)
 
 
 def calc_gyration(length):
@@ -34,16 +34,14 @@ def main():
 
     start_time = time.clock()  # Start performance timer
 
-    lat2.LatticeGen.initialize_lattice()
+    lat.LatticeGen.initialize_lattice()
 
     for length in range(3, CHAIN_LENGTH + 1):
         lattice = generate_lattice(length)
         # read_data_file(length)
-        # gyration = calc_gyration(length)
+        gyration = calc_gyration(length)
 
-        # f.write('{},{},{}\n'.format(length, lattice[1], lattice[0]))
-        # f.write('{},{},{},{},{}\n'.format(length, lattice[1], lattice[0], gyration[0], gyration[1]))
-        # print('{},{},{},{},{}\n'.format(length, lattice[1], lattice[0], gyration[0], gyration[1]))
+        f.write('{},{},{},{},{}\n'.format(length, lattice[1], lattice[0], gyration[0], gyration[1]))
     f.close()
 
     end_time = time.clock()

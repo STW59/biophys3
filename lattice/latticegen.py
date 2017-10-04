@@ -1,9 +1,3 @@
-"""
-File authored by Stephen E. White
-STW59@pitt.edu
-
-Algorithm modified from: https://github.com/jbloomlab/latticeproteins
-"""
 import pickle
 import time
 
@@ -16,6 +10,13 @@ class LatticeGen:
         return self.__chain_length
 
     @staticmethod
+    def initialize_lattice():
+        export_file = open('lattice_2.dat', 'wb')
+        residue_coords = [(0, 0), (0, 1)]
+        pickle.dump(residue_coords, export_file)
+        export_file.close()
+
+    @staticmethod
     def generate_lattice(chain_length):
         """
         Generates a lattice model given a starting chain length.
@@ -24,62 +25,42 @@ class LatticeGen:
         """
         start_time = time.clock()  # Start performance timer
 
+        conformations = 0
         x_step = {'u': 0, 'r': 1, 'd': 0, 'l': -1}
         y_step = {'u': 1, 'r': 0, 'd': -1, 'l': 0}
-        next_step = {'u': 'r', 'r': 'd', 'd': 'l', 'l': 'u'}
-        n = chain_length - 2  # Index of last bond
-        conformation = ['u' for i in range(n + 1)]
-        conformation_count = 0
-        first_r = n
-
+        steps = ['u', 'r', 'd', 'l']
+        import_file = open('lattice_{}.dat'.format(chain_length-1), 'rb')
         export_file = open('lattice_{}.dat'.format(chain_length), 'wb')
 
-        while True:
-            x = 0  # x coordinate
-            y = 0  # y coordinate
-            j = 0  # Residue number
+        try:
+            structure = pickle.load(import_file)
+            while structure:
+                residue_coords = []
+                for coords in structure:
+                    residue_coords.append(coords)
 
-            residue_loc = {(x, y): j}  # Residue locations indexed by residue number
-            residue_coords = [(x, y)]  # Non-indexed residue locations
+                x = residue_coords[-1][0]
+                y = residue_coords[-1][1]
 
-            for c in conformation:
-                x += x_step[c]
-                y += y_step[c]
-                coord = (x, y)
-                if coord in residue_loc:  # Look for an intersection
-                    for k in range(j + 1, n + 1):  # Try again at that step
-                        conformation[k] = 'u'
-                    conformation[j] = next_step[conformation[j]]
-                    while conformation[j] == 'u':
-                        j -= 1
-                        conformation[j] = next_step[conformation[j]]
-                    if j == first_r and conformation[j] not in ['u', 'r']:
-                        first_r -= 1
-                        conformation[first_r] = 'r'
-                        for k in range(j, n + 1):
-                            conformation[k] = 'u'
-                    break
-                j += 1
-                residue_loc[coord] = j
-                residue_coords.append(coord)
-            else:
-                i = n
-                conformation[i] = next_step[conformation[i]]
-                while conformation[i] == 'u':
-                    i -= 1
-                    conformation[i] = next_step[conformation[i]]
+                for step in steps:
+                    residue_coords_iter = residue_coords.copy()
+                    x += x_step[step]
+                    y += y_step[step]
+                    coord = (x, y)
+                    if coord not in residue_coords_iter:
+                        residue_coords_iter.append(coord)
+                        pickle.dump(residue_coords_iter, export_file)
+                        conformations += 1
 
-                if i == first_r and conformation[i] not in ['u', 'r']:
-                    first_r -= 1
-                    conformation[first_r] = 'r'
-                    for j in range(i, n + 1):
-                        conformation[j] = 'u'
-                pickle.dump(residue_coords, export_file)
-                conformation_count += 1
+                    x = residue_coords[-1][0]
+                    y = residue_coords[-1][1]
 
-                if first_r == 0:
-                    break
+                structure = pickle.load(import_file)
+        except EOFError:
+            pass
+        finally:
+            import_file.close()
+            export_file.close()
 
         end_time = time.clock()  # End performance timer
-        export_file.close()
-        return end_time - start_time, conformation_count
+        return end_time - start_time, conformations
