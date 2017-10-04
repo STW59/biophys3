@@ -1,7 +1,6 @@
 import gyration as gyr
 import latticegen as lat
 import pickle
-import time
 
 CHAIN_LENGTH = 16
 
@@ -32,8 +31,6 @@ def main():
     f = open('STW59_Lattice_Output.txt', 'w')
     f.write('length,conformations,time,min_radius,avg_radius\n')
 
-    start_time = time.clock()  # Start performance timer
-
     lat.LatticeGen.initialize_lattice()
 
     for length in range(3, CHAIN_LENGTH + 1):
@@ -43,10 +40,6 @@ def main():
 
         f.write('{},{},{},{},{}\n'.format(length, lattice[1], lattice[0], gyration[0], gyration[1]))
     f.close()
-
-    end_time = time.clock()
-
-    print(end_time - start_time)
 
 
 main()

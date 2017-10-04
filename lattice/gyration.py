@@ -12,35 +12,28 @@ class Gyration:
     @staticmethod
     def radius_calc(chain_length):
         f = open('lattice_{}.dat'.format(chain_length), 'rb')
-        x_sum = 0
-        y_sum = 0
-        radius_sum = 0
-        avg_radius_sum = 0
-        min_radius = 1000000.0
-        conformations = 0
+        rog = []
 
         try:
             structure = pickle.load(f)
             while structure:
-                for coords in structure:
-                    x_sum += coords[0]
-                    y_sum += coords[1]
-                x_avg = x_sum / chain_length
-                y_avg = y_sum / chain_length
+                radius_sum_array = []
+                array = np.array(structure)
+                avg_coord = np.average(array, axis=0)
 
                 for coords in structure:
-                    radius_sum += np.sqrt((coords[0] - x_avg)**2 + (coords[1] - y_avg)**2)
-                radius = np.sqrt((1 / chain_length) * radius_sum)
-                avg_radius_sum += radius
-                if radius < min_radius:
-                    min_radius = radius
+                    radius_sum_array.append((coords[0] - avg_coord[0])**2 + (coords[1] - avg_coord[1])**2)
+                radius = np.sqrt((1 / len(radius_sum_array)) * sum(radius_sum_array))
+                rog.append(radius)
 
-                conformations += 1
                 structure = pickle.load(f)
         except EOFError:
             pass
         finally:
-            avg_radius = avg_radius_sum / conformations
             f.close()
+            rog_array = np.array(rog)
+            min_radius = np.amin(rog_array)
+            avg_radius = np.average(rog_array)
+            print(min_radius, avg_radius)
 
         return min_radius, avg_radius
