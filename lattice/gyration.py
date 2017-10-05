@@ -11,7 +11,7 @@ class Gyration:
 
     @staticmethod
     def radius_calc(chain_length):
-        f = open('lattice_{}.dat'.format(chain_length), 'rb')
+        f = open('data/lattice_{}.dat'.format(chain_length), 'rb')
         rog = []
 
         try:

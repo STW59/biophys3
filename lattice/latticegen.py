@@ -1,17 +1,18 @@
+import os
 import pickle
 import time
 
 
 class LatticeGen:
-    def __init__(self, chain_length):
-        self.__chain_length = chain_length
-
-    def chain_length(self):
-        return self.__chain_length
+    def __init__(self):
+        pass
 
     @staticmethod
     def initialize_lattice():
-        export_file = open('lattice_2.dat', 'wb')
+        if not os.path.exists('data/'):
+            os.mkdir('data/')
+
+        export_file = open('data/lattice_2.dat', 'wb')
         residue_coords = [(0, 0), (0, 1)]
         pickle.dump(residue_coords, export_file)
         export_file.close()
@@ -29,8 +30,8 @@ class LatticeGen:
         x_step = {'u': 0, 'r': 1, 'd': 0, 'l': -1}
         y_step = {'u': 1, 'r': 0, 'd': -1, 'l': 0}
         steps = ['u', 'r', 'd', 'l']
-        import_file = open('lattice_{}.dat'.format(chain_length-1), 'rb')
-        export_file = open('lattice_{}.dat'.format(chain_length), 'wb')
+        import_file = open('data/lattice_{}.dat'.format(chain_length-1), 'rb')
+        export_file = open('data/lattice_{}.dat'.format(chain_length), 'wb')
 
         try:
             structure = pickle.load(import_file)
