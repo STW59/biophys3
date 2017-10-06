@@ -81,8 +81,8 @@ class MonteCarlo:
             f.close()
 
         reject_rate_list = []
-        # Average reject rate over 20% of structures
-        for r in range(0, structure_count // 5):
+        # Average reject rate over all structures
+        for r in range(0, structure_count):
             # Get a random structure from the data set
             try:
                 f = open('\data\lattice_{}.dat'.format(chain_length), 'rb')
@@ -95,7 +95,7 @@ class MonteCarlo:
                 f.close()
 
             # Perform chain_length sweeps of the structure
-            for sweeps in range(0, chain_length):
+            for sweeps in range(0, 10):
                 # Read bonds into a list
                 results = []
                 bonds = []
@@ -103,7 +103,7 @@ class MonteCarlo:
                     bonds.append(MonteCarlo.get_direction(structure[atom], structure[atom + 1]))\
 
                 # Attempt 10 moves on the random bond
-                for moves in range(0, 10):
+                for moves in range(0, chain_length):
                     # Change the direction of a random bond
                     new_bonds = bonds.copy()
                     bond_change_index = random.randint(0, len(bonds) - 1)
@@ -140,13 +140,4 @@ class MonteCarlo:
             reject_rate = results.count('Reject') / len(results)
             reject_rate_list.append(reject_rate)
         reject_rate_list = np.array(reject_rate_list)
-        print('Average reject rate = {:.3f}'.format(np.average(reject_rate_list)))
-
-
-def main():
-    chain_length = 8
-    for i in range(1):
-        MonteCarlo.pivot(chain_length)
-
-
-main()
+        return np.average(reject_rate_list)

@@ -34,6 +34,5 @@ class Gyration:
             rog_array = np.array(rog)
             min_radius = np.amin(rog_array)
             avg_radius = np.average(rog_array)
-            print(min_radius, avg_radius)
 
         return min_radius, avg_radius
