@@ -23,11 +23,10 @@ class GoModel:
         return structure, residue_positions
 
     @staticmethod
-    def build_contact_set():
+    def calc_energy(structure_data):
         num_contacts = 0
         x_step = {'u': 0, 'r': 1, 'd': 0, 'l': -1}
         y_step = {'u': 1, 'r': 0, 'd': -1, 'l': 0}
-        structure_data = GoModel.generate_structure()
         structure = structure_data[0]
         residue_positions = structure_data[1]
 
@@ -45,13 +44,12 @@ class GoModel:
             for partner in partners_list:
                 num_contacts += 1
 
-            energy = -num_contacts
-
-        print('Energy = {} epsilon'.format(energy))
+        print('Energy = {} epsilon'.format(-num_contacts))
+        return -num_contacts
 
 
 def main():
-    GoModel.build_contact_set()
+    GoModel.calc_energy(GoModel.generate_structure())
 
 
 main()

@@ -16,7 +16,7 @@ def calc_gyration(length):
 
 
 def pivot_move(length):
-    return mc.MonteCarlo.pivot(length)
+    return mc.MonteCarlo.acceptance_rate(length)
 
 
 def read_data_file(length):
@@ -48,6 +48,7 @@ def main():
         gyration = calc_gyration(length)
         average_reject_rate = pivot_move(length)
 
+        # pt1_out.write('{},{},{}\n'.format(length, lattice[1], lattice[0]))
         pt1_out.write('{},{},{},{},{}\n'.format(length, lattice[1], lattice[0], gyration[0], gyration[1]))
         pt2_out.write('{},{}\n'.format(length, average_reject_rate))
 
