@@ -35,7 +35,7 @@ def main():
         average_accept_rate = pivot_move(length)
         pt2_out.write('{},{}\n'.format(length, average_accept_rate))
     pt2_out.close()
-    print(go_model())
+    go_model()
     simulated_annealing(16)
     end_time = time.clock()
     print('Total run time = {:.3f} seconds'.format(end_time - start_time))

@@ -49,7 +49,7 @@ class GoModel:
 
 
 def main():
-    GoModel.calc_energy(GoModel.generate_structure())
+    print('Model structure interaction energy = {} epsilon'.format(GoModel.calc_energy(GoModel.generate_structure())))
 
 
 # main()
