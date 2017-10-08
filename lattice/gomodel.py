@@ -4,8 +4,8 @@ class GoModel:
 
     @staticmethod
     def generate_structure():
-        bonds = ['r', 'r', 'r', 'u', 'l', 'l', 'l', 'u', 'u', 'r', 'd', 'r', 'u', 'r', 'd']
-        # bonds = ['u', 'u', 'u', 'r', 'r', 'r', 'd', 'd', 'd', 'l', 'l', 'u', 'u', 'r', 'd']
+        # bonds = ['r', 'r', 'r', 'u', 'l', 'l', 'l', 'u', 'u', 'r', 'd', 'r', 'u', 'r', 'd']  # Given structure
+        bonds = ['u', 'u', 'u', 'r', 'r', 'r', 'd', 'd', 'd', 'l', 'l', 'u', 'u', 'r', 'd']  # Different test structure
         x = 0
         y = 0
         j = 0
@@ -44,7 +44,7 @@ class GoModel:
             for partner in partners_list:
                 num_contacts += 1
 
-        print('Energy = {} epsilon'.format(-num_contacts))
+        # print('Energy = {} epsilon'.format(-num_contacts))
         return -num_contacts
 
 
@@ -52,4 +52,4 @@ def main():
     GoModel.calc_energy(GoModel.generate_structure())
 
 
-main()
+# main()
