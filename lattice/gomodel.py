@@ -1,3 +1,6 @@
+import randomstructure as rs
+
+
 class GoModel:
     def __init__(self):
         pass
@@ -49,7 +52,12 @@ class GoModel:
 
 
 def main():
-    print('Model structure interaction energy = {} epsilon'.format(GoModel.calc_energy(GoModel.generate_structure())))
+    # Generate a random structure
+    structure_data = rs.RandomStructure.gen_random_structure(16)
+
+    # Calculate the interaction energy for the structure
+    energy = GoModel.calc_energy(structure_data)
+    print('Model structure interaction energy = {} epsilon'.format(energy))
 
 
 # main()

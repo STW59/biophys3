@@ -7,3 +7,4 @@ test/
 /lattice/data/
 /lattice/STW59_Lattice_Output.csv
 /lattice/*.csv
+/lattice/*.dat

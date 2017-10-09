@@ -3,7 +3,12 @@ import montecarlo as mc
 import numpy as np
 import pickle
 import random
+import randomstructure as rs
 import time
+
+TEMP_DATA_OLD = 'temp_data_old.dat'
+TEMP_DATA_TRIAL = 'temp_data_trial.dat'
+TEMP_DATA_NEW = 'temp_data_new.dat'
 
 
 class SimAnneal:
@@ -11,49 +16,43 @@ class SimAnneal:
         pass
 
     @staticmethod
-    def sweep(structure, chain_length):
-        # Read bonds into a list
-        bonds = []
-        for atom in range(len(structure) - 1):
-            bonds.append(mc.MonteCarlo.get_direction(structure[atom], structure[atom + 1]))
+    def copy_temp():
+        # Create empty old data temp file
+        temp_data_old = open(TEMP_DATA_OLD, 'wb')
+        temp_data_old.close()
 
-        # Attempt chain_length moves on the random bond
-        for moves in range(0, chain_length):
-            # Change the direction of a random bond
-            new_bonds = bonds.copy()
-            bond_change_index = random.randint(0, len(bonds) - 1)
-            direction = mc.MonteCarlo.direction_change(new_bonds[bond_change_index])
-            new_bonds[bond_change_index] = direction[0]
+        # Copy new data to old data temp file
+        temp_data_new = open(TEMP_DATA_NEW, 'rb')
+        temp_data_old = open(TEMP_DATA_OLD, 'wb')
 
-            # Determine rotation (cw, ccw, flip)
-            rotation = direction[1]
+        try:
+            data = pickle.load(temp_data_new)
+            while data:
+                pickle.dump(data, temp_data_old)
+                data = pickle.load(temp_data_new)
+        except EOFError:
+            pass
+        finally:
+            temp_data_new.close()
+            temp_data_old.close()
 
-            # Adjust the remainder of the bonds
-            for bond_index in range(bond_change_index + 1, len(bonds)):
-                new_bonds[bond_index] = rotation[bonds[bond_index]]
+        # Create empty new data temp file
+        temp_data_new = open(TEMP_DATA_NEW, 'wb')
+        temp_data_new.close()
 
-            # Build new structure coordinates
-            x = 0
-            y = 0
-            x_step = {'u': 0, 'r': 1, 'd': 0, 'l': -1}
-            y_step = {'u': 1, 'r': 0, 'd': -1, 'l': 0}
-            new_structure = [(x, y)]
-            for bond in new_bonds:
-                x += x_step[bond]
-                y += y_step[bond]
-                coord = (x, y)
-                if coord not in new_structure:
-                    new_structure.append(coord)
-                else:
-                    return 'Reject', 0
-            return 'Accept', new_structure
+        # Create empty trial data temp file
+        temp_data_trial = open(TEMP_DATA_TRIAL, 'wb')
+        temp_data_trial.close()
 
     @staticmethod
-    def structure_data_format(structure):
-        structure_dict = {}
-        for j in range(len(structure)):
-            structure_dict[(structure[j][0], structure[j][1])] = j
-        return structure, structure_dict
+    def sweep(structure):
+        temp_data_trial = open(TEMP_DATA_TRIAL, 'ab')
+        for sweeps in range(0, 101):
+            attempt = mc.MonteCarlo.pivot_sweep(structure[0])
+            if attempt[0] is 'Accept':
+                attempt_data = attempt[1], attempt[2]  # format: (x, y) list, {(x, y): j} dictionary
+                pickle.dump((structure, attempt_data), temp_data_trial)  # Output the successful structure to a temp file
+        temp_data_trial.close()
 
     @staticmethod
     def anneal(chain_length):
@@ -64,54 +63,75 @@ class SimAnneal:
 
         output = open('STW59_Simulated_Annealing_Output.csv', 'w')
 
-        # Pick a random structure from data set
-        structure = []
-        structure_count = mc.MonteCarlo.structure_count(chain_length)
-        f = open('data/lattice_{}.dat'.format(chain_length), 'rb')
-        try:
-            structure = pickle.load(f)
-            for i in range(random.randint(1, structure_count)):
-                structure = pickle.load(f)
-        except EOFError:
-            pass
-        finally:
-            f.close()
+        # Generate a random structure of chain_length
+        structure_data = rs.RandomStructure.gen_random_structure(chain_length)
 
-        structure_data = SimAnneal.structure_data_format(structure)
-
-        output.write('Structure: [{}]\n'.format(structure))
+        output.write('Structure: [{}]\n'.format(structure_data[0]))
         output.write('\n')
 
         for beta_start_value in beta_start:
+
             output.write('starting_beta = {}\n'.format(beta_start_value))
             output.write('beta,average_energy\n')
             beta = beta_start_value
             while beta <= 10.0:
-                results = []
-                old_structure = structure_data
-                e_old = go.GoModel.calc_energy(old_structure)
-                trial_structures = []
-                for sweeps in range(0, 101):
-                    trial_structures.append(SimAnneal.sweep(structure, chain_length))
+                if beta == beta_start_value:
+                    # Sweep old structure
+                    old_structure = structure_data
+                    SimAnneal.sweep(old_structure)
+                else:
+                    # Move last iteration's new data to old data file
+                    SimAnneal.copy_temp()
 
-                for trial in trial_structures:
-                    if trial[0] is 'Accept':
-                        e_trial = go.GoModel.calc_energy(SimAnneal.structure_data_format(trial[1]))
-                        if beta * (e_old - e_trial) > np.log(r):
+                    # Sweep all new structures in old data file
+                    temp_data_old = open(TEMP_DATA_OLD, 'rb')
+                    try:
+                        structure = pickle.load(temp_data_old)
+                        while structure:
+                            old_structure = structure[0]
+                            SimAnneal.sweep(old_structure)
+                            structure = pickle.load(temp_data_old)
+                    except EOFError:
+                        pass
+                    finally:
+                        temp_data_old.close()
+
+                temp_data_trial = open(TEMP_DATA_TRIAL, 'rb')
+                temp_data_new = open(TEMP_DATA_NEW, 'wb')
+                try:
+                    trial_data = pickle.load(temp_data_trial)
+                    while trial_data:
+                        results = []
+                        old_structure = trial_data[0]
+                        trial_structure = trial_data[1]
+
+                        e_old = go.GoModel.calc_energy(old_structure)
+                        e_trial = go.GoModel.calc_energy(trial_structure)
+
+                        if beta * (e_old - e_trial) > np.log(r):  # Accept move
                             results.append(e_trial)
-                        else:
+                            pickle.dump(trial_data, temp_data_new)
+                        else:  # Reject move
                             results.append(e_old)
+                            pickle.dump((old_structure, old_structure), temp_data_new)
+
+                        trial_data = pickle.load(temp_data_trial)
+                except EOFError:
+                    pass
+                finally:
+                    temp_data_new.close()
+
                 results_array = np.array(results)
                 average_e = np.average(results_array)
-
                 output.write('{},{}\n'.format(beta, average_e))
+                print('beta = {} completed'.format(beta))
                 beta = (1 + delta) * beta
             output.write('\n')
 
 
 def main():
     start_time = time.clock()
-    SimAnneal.anneal(16)
+    SimAnneal.anneal(8)
     end_time = time.clock()
     print('time = {}'.format(end_time - start_time))
 

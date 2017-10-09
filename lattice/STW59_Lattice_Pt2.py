@@ -1,14 +1,9 @@
 import gomodel as go
-import latticegen as lat
 import montecarlo as mc
 import simanneal as sim
 import time
 
-CHAIN_LENGTH = 16
-
-
-def generate_lattice(length):
-    return lat.LatticeGen.generate_lattice(length)
+CHAIN_LENGTH = 100
 
 
 def pivot_move(length):
@@ -28,15 +23,12 @@ def main():
     pt2_out = open('STW59_Lattice_Output_Pt2.csv', 'w')
     pt2_out.write('length,acceptance_rate\n')
 
-    lat.LatticeGen.initialize_lattice()
-
     for length in range(3, CHAIN_LENGTH + 1):
-        generate_lattice(length)
         average_accept_rate = pivot_move(length)
         pt2_out.write('{},{}\n'.format(length, average_accept_rate))
     pt2_out.close()
-    go_model()
-    simulated_annealing(16)
+    # go_model()
+    # simulated_annealing(16)
     end_time = time.clock()
     print('Total run time = {:.3f} seconds'.format(end_time - start_time))
 
