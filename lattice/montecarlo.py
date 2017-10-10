@@ -72,13 +72,14 @@ class MonteCarlo:
     @staticmethod
     def acceptance_rate(chain_length):
         accept_rate_list = []
-        # Average reject rate over total number of structures
+        attempts = 0  # Count the number of moves per structure
+        # Average the reject rate over 10 different structures
         for sweeps in range(0, 10):
-            attempts = 0
             # Generate a random structure of given chain_length
             structure = rs.RandomStructure.gen_random_structure(chain_length)[0]
 
             results = []
+            # Perform moves at 10 random bonds per structure
             for bond_changes in range(0, 10):
                 # Read bonds into a list
                 bonds = []
@@ -86,7 +87,7 @@ class MonteCarlo:
                 for atom in range(len(structure) - 1):
                     bonds.append(MonteCarlo.get_direction(structure[atom], structure[atom + 1]))
 
-                # Attempt chain_length moves on the random bond
+                # Attempt chain_length moves per random bond
                 for moves in range(0, chain_length):
                     attempts += 1
                     # Change the direction of a random bond
@@ -131,7 +132,7 @@ class MonteCarlo:
             accept_rate = accept_count / len(results)
             accept_rate_list.append(accept_rate)
 
-        print('Attempts = {}'.format(attempts))
+        # print('Attempts = {}'.format(attempts))  # Should be 100 * chain_length
         return np.average(accept_rate_list)
 
 
@@ -146,4 +147,4 @@ def main():
         print()
 
 
-main()
+# main()
