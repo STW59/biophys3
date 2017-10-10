@@ -47,4 +47,4 @@ def main():
     print(RandomStructure.gen_random_structure(20)[0])
 
 
-main()
+# main()

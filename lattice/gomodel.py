@@ -7,8 +7,8 @@ class GoModel:
 
     @staticmethod
     def generate_structure():
-        # bonds = ['r', 'r', 'r', 'u', 'l', 'l', 'l', 'u', 'u', 'r', 'd', 'r', 'u', 'r', 'd']  # Given structure
-        bonds = ['u', 'u', 'u', 'r', 'r', 'r', 'd', 'd', 'd', 'l', 'l', 'u', 'u', 'r', 'd']  # Different test structure
+        bonds = ['r', 'r', 'r', 'u', 'l', 'l', 'l', 'u', 'u', 'r', 'd', 'r', 'u', 'r', 'd']  # Given structure
+        # bonds = ['u', 'u', 'u', 'r', 'r', 'r', 'd', 'd', 'd', 'l', 'l', 'u', 'u', 'r', 'd']  # Different test structure
         x = 0
         y = 0
         j = 0
@@ -53,7 +53,10 @@ class GoModel:
 
 def main():
     # Generate a random structure
-    structure_data = rs.RandomStructure.gen_random_structure(16)
+    # structure_data = rs.RandomStructure.gen_random_structure(16)
+
+    # Use the pre-defined structure from the assignment
+    structure_data = GoModel.generate_structure()
 
     # Calculate the interaction energy for the structure
     energy = GoModel.calc_energy(structure_data)

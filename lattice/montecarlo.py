@@ -25,11 +25,14 @@ class MonteCarlo:
         return direction
 
     @staticmethod
-    def direction_change(direction):
+    def direction_change(direction, last_direction):
         bond_directions = ['u', 'r', 'd', 'l']
         new_direction = direction
+        opposites = {'u': 'd', 'd': 'u', 'r': 'l', 'l': 'r'}
         while new_direction is direction:
             new_direction = bond_directions[random.randint(0, 3)]
+            while new_direction is opposites[last_direction]:
+                new_direction = bond_directions[random.randint(0, 3)]
         rotation = MonteCarlo.get_rotation(direction, new_direction)
         return new_direction, rotation
 
@@ -67,74 +70,80 @@ class MonteCarlo:
             print('Invalid bond')
 
     @staticmethod
-    def pivot_sweep(structure):
-        # Read bonds into a list
-        bonds = []
-        chain_length = len(structure)
-        for atom in range(len(structure) - 1):
-            bonds.append(MonteCarlo.get_direction(structure[atom], structure[atom + 1]))
-
-        # Attempt chain_length moves on the random bond
-        for moves in range(0, chain_length):
-            # Change the direction of a random bond
-            new_bonds = bonds.copy()
-            bond_change_index = random.randint(0, len(bonds) - 1)
-            direction = MonteCarlo.direction_change(new_bonds[bond_change_index])
-            new_bonds[bond_change_index] = direction[0]
-
-            # Determine rotation (cw, ccw, flip)
-            rotation = direction[1]
-
-            # Adjust the remainder of the bonds
-            for bond_index in range(bond_change_index + 1, len(bonds)):
-                new_bonds[bond_index] = rotation[bonds[bond_index]]
-
-            # Build new structure coordinates
-            x = 0
-            y = 0
-            j = 0
-            x_step = {'u': 0, 'r': 1, 'd': 0, 'l': -1}
-            y_step = {'u': 1, 'r': 0, 'd': -1, 'l': 0}
-            new_structure = [(x, y)]
-            residue_locations = {(x, y): j}
-            for bond in new_bonds:
-                x += x_step[bond]
-                y += y_step[bond]
-                j += 1
-                coord = (x, y)
-                if coord not in new_structure:
-                    new_structure.append(coord)
-                    residue_locations[(x, y)] = j
-                else:
-                    return 'Reject', 0
-            return 'Accept', new_structure, residue_locations
-
-    @staticmethod
     def acceptance_rate(chain_length):
         accept_rate_list = []
         # Average reject rate over total number of structures
-        for sweeps in range(0, 11):
+        for sweeps in range(0, 10):
+            attempts = 0
             # Generate a random structure of given chain_length
             structure = rs.RandomStructure.gen_random_structure(chain_length)[0]
 
             results = []
-            for moves in range(0, chain_length):
-                results.append(MonteCarlo.pivot_sweep(structure)[0])
-            accept_rate = results.count('Accept') / len(results)
+            for bond_changes in range(0, 10):
+                # Read bonds into a list
+                bonds = []
+                chain_length = len(structure)
+                for atom in range(len(structure) - 1):
+                    bonds.append(MonteCarlo.get_direction(structure[atom], structure[atom + 1]))
+
+                # Attempt chain_length moves on the random bond
+                for moves in range(0, chain_length):
+                    attempts += 1
+                    # Change the direction of a random bond
+                    new_bonds = bonds.copy()
+                    bond_change_index = random.randint(0, len(bonds) - 1)
+                    direction = MonteCarlo.direction_change(new_bonds[bond_change_index],
+                                                            new_bonds[bond_change_index - 1])
+                    new_bonds[bond_change_index] = direction[0]
+
+                    # Determine rotation (cw, ccw, flip)
+                    rotation = direction[1]
+
+                    # Adjust the remainder of the bonds
+                    for bond_index in range(bond_change_index + 1, len(bonds)):
+                        new_bonds[bond_index] = rotation[bonds[bond_index]]
+
+                    # Build new structure coordinates
+                    x = 0
+                    y = 0
+                    j = 0
+                    x_step = {'u': 0, 'r': 1, 'd': 0, 'l': -1}
+                    y_step = {'u': 1, 'r': 0, 'd': -1, 'l': 0}
+                    new_structure = [(x, y)]
+                    residue_locations = {(x, y): j}
+                    for bond in new_bonds:
+                        x += x_step[bond]
+                        y += y_step[bond]
+                        j += 1
+                        coord = (x, y)
+                        if coord not in new_structure:
+                            new_structure.append(coord)
+                            residue_locations[(x, y)] = j
+                        else:
+                            results.append(('Reject', 0))
+                    results.append(('Accept', new_structure, residue_locations))
+
+            accept_count = 0
+            for result in results:
+                if result[0] is 'Accept':
+                    accept_count += 1
+
+            accept_rate = accept_count / len(results)
             accept_rate_list.append(accept_rate)
 
-        # Calculate acceptance rate
-        accept_rate_list = np.array(accept_rate_list)
+        print('Attempts = {}'.format(attempts))
         return np.average(accept_rate_list)
 
 
 def main():
-    for i in range(3, 21):
-        start_time = time.clock()
-        print(MonteCarlo.acceptance_rate(i))
-        end_time = time.clock()
+    # for i in [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 30, 40, 50, 60, 70, 80, 90, 100]:
+    for i in [3, 4, 5, 6, 7, 8, 9, 10]:
         print('N = {}'.format(i))
+        start_time = time.clock()
+        print('Acceptance rate = {}'.format(MonteCarlo.acceptance_rate(i)))
+        end_time = time.clock()
         print('Run time = {} seconds'.format(end_time - start_time))
+        print()
 
 
-# main()
+main()

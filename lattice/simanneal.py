@@ -131,9 +131,9 @@ class SimAnneal:
 
 def main():
     start_time = time.clock()
-    SimAnneal.anneal(8)
+    SimAnneal.anneal(16)
     end_time = time.clock()
     print('time = {}'.format(end_time - start_time))
 
 
-# main()
+main()
