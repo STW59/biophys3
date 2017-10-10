@@ -1,5 +1,6 @@
 import gomodel as go
 import montecarlo as mc
+import randomstructure as rs
 import simanneal as sim
 import time
 
@@ -21,24 +22,33 @@ def go_model():
 
 
 def simulated_annealing(length):
-    return sim.SimAnneal.anneal(length)
+    # Use provided structure
+    structure_data = go.GoModel.generate_structure()
+    sim.SimAnneal.anneal(structure_data)
+
+    # Generate a random structure of chain_length
+    structure_data = rs.RandomStructure.gen_random_structure(length)
+    sim.SimAnneal.anneal(structure_data)
 
 
 def main():
+    print('Beginning Monte Carlo block')
     start_time_1 = time.clock()
     monte_carlo()
     end_time = time.clock()
     print('Monte Carlo run time = {:.3f} seconds'.format(end_time - start_time_1))
     print()
 
+    print('Beginning Go Model block')
     start_time = time.clock()
     go_model()
     end_time = time.clock()
     print('Go Model run time = {:.6f} seconds'.format(end_time - start_time))
     print()
 
+    print('Beginning Simulated Annealing block')
     start_time = time.clock()
-    # simulated_annealing(4)
+    simulated_annealing(16)
     end_time = time.clock()
     print('Simulated annealing run time = {:.3f} seconds'.format(end_time - start_time))
     print()

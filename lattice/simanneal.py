@@ -1,8 +1,6 @@
 import gomodel as go
 import montecarlo as mc
 import numpy as np
-import os
-import pickle
 import random
 import randomstructure as rs
 import time
@@ -17,50 +15,8 @@ class SimAnneal:
         pass
 
     @staticmethod
-    def copy_temp():
-        # Create empty old data temp file
-        old_structure_data = open(OLD_STRUCTURE_DATA, 'wb')
-        old_structure_data.close()
+    def sweep(bonds, old_structure_data):
 
-        # Copy new data to old data temp file
-        new_structure_data = open(NEW_STRUCTURE_DATA, 'rb')
-        old_structure_data = open(OLD_STRUCTURE_DATA, 'wb')
-
-        try:
-            data = pickle.load(new_structure_data)
-            while data:
-                pickle.dump(data, old_structure_data)
-                data = pickle.load(new_structure_data)
-        except EOFError:
-            pass
-        finally:
-            new_structure_data.close()
-            old_structure_data.close()
-
-        # Create empty new data temp file
-        new_structure_data = open(NEW_STRUCTURE_DATA, 'wb')
-        new_structure_data.close()
-
-        # Create empty trial data temp file
-        trial_structure_data = open(TRIAL_STRUCTURE_DATA, 'wb')
-        trial_structure_data.close()
-
-    @staticmethod
-    def sweep(structure):
-        trial_structure_data = open(TRIAL_STRUCTURE_DATA, 'ab')
-        # For each structure, perform 100 sweeps
-        for sweeps in range(0, 3):
-            # Perform moves at 10 random bonds per structure
-            for bond_changes in range(0, 1):
-                # Read bonds into a list
-                bonds = []
-                chain_length = len(structure[0])
-                for atom in range(len(structure[0]) - 1):
-                    bonds.append(mc.MonteCarlo.get_direction(structure[0][atom], structure[0][atom + 1]))
-
-                # Attempt chain_length moves per random bond
-                for moves in range(0, chain_length):
-                    # Change the direction of a random bond
                     new_bonds = bonds.copy()
                     bond_change_index = random.randint(0, len(bonds) - 1)
                     direction = mc.MonteCarlo.direction_change(new_bonds[bond_change_index],
@@ -91,87 +47,68 @@ class SimAnneal:
                             new_structure.append(coord)
                             residue_locations[(x, y)] = j
                         else:
-                            attempt = ('Reject', 0)
-                    attempt = ('Accept', new_structure, residue_locations)
-
-                    if attempt[0] is 'Accept':
-                        attempt_data = attempt[1], attempt[2]  # format: (x, y) list, {(x, y): j} dictionary
-                        pickle.dump((structure, attempt_data), trial_structure_data)  # Output the successful structure to a temp file
-        trial_structure_data.close()
+                            return old_structure_data[0], old_structure_data[1]
+                    return new_structure, residue_locations
 
     @staticmethod
-    def anneal(chain_length):
-        if not os.path.exists('data/'):
-            os.mkdir('data/')
-
+    def anneal(structure_data):
         r = random.uniform(0, 1)
+        print('RNG value = {}'.format(r))
 
         beta_start = [1., 5., 9.]
         delta = 0.1
 
+        # Overwrite old or create new output file
         output = open('STW59_Simulated_Annealing_Output.csv', 'w')
+        output.close()
 
-        # Generate a random structure of chain_length
-        structure_data = rs.RandomStructure.gen_random_structure(chain_length)
-        print(structure_data[0])
+        # Since there are multiple structures, append results to the output file
+        output = open('STW59_Simulated_Annealing_Output.csv', 'a')
 
+        # Write structure used to output file
         output.write('Structure: [{}]\n'.format(structure_data[0]))
         output.write('\n')
 
         for beta_start_value in beta_start:
-
+            # Write starting beta value and headers to output file
             output.write('starting_beta = {}\n'.format(beta_start_value))
             output.write('beta,average_energy\n')
+
             beta = beta_start_value
             while beta <= 10.0:
+                energy_results = []
+
                 if beta == beta_start_value:
-                    # Sweep old structure
                     old_structure = structure_data
-                    SimAnneal.sweep(old_structure)
-                else:
-                    # Move last iteration's new data to old data file
-                    SimAnneal.copy_temp()
 
-                    # Sweep all new structures in old data file
-                    old_structure_data = open(OLD_STRUCTURE_DATA, 'rb')
-                    try:
-                        structure = pickle.load(old_structure_data)
-                        while structure:
-                            old_structure = structure[0]
-                            SimAnneal.sweep(old_structure)
-                            structure = pickle.load(old_structure_data)
-                    except EOFError:
-                        pass
-                    finally:
-                        old_structure_data.close()
+                # For each structure, perform 100 sweeps
+                for sweeps in range(0, 100):
+                    # Perform moves at 10 random bonds per structure
+                    for bond_changes in range(0, 10):
+                        # Read bonds into a list
+                        bonds = []
+                        chain_length = len(structure_data[0])
+                        for atom in range(len(structure_data[0]) - 1):
+                            bonds.append(
+                                mc.MonteCarlo.get_direction(structure_data[0][atom], structure_data[0][atom + 1]))
 
-                trial_structure_data = open(TRIAL_STRUCTURE_DATA, 'rb')
-                new_structure_data = open(NEW_STRUCTURE_DATA, 'wb')
-                results = []
-                try:
-                    trial_data = pickle.load(trial_structure_data)
-                    while trial_data:
-                        old_structure = trial_data[0]
-                        trial_structure = trial_data[1]
+                        # Attempt chain_length moves per random bond
+                        for moves in range(0, chain_length):
+                            # Change the direction of a random bond
+                            trial_structure_data = SimAnneal.sweep(bonds, structure_data)
 
-                        e_old = go.GoModel.calc_energy(old_structure)
-                        e_trial = go.GoModel.calc_energy(trial_structure)
+                            e_old = go.GoModel.calc_energy(old_structure)
+                            e_trial = go.GoModel.calc_energy(trial_structure_data)
 
-                        if beta * (e_old - e_trial) > np.log(r):  # Accept move
-                            results.append(e_trial)
-                            pickle.dump(trial_data, new_structure_data)
-                        else:  # Reject move
-                            results.append(e_old)
-                            pickle.dump((old_structure, old_structure), new_structure_data)
+                            if beta * (e_old - e_trial) > np.log(r):  # Accept move
+                                energy_results.append(e_trial)
+                                structure_data = trial_structure_data
+                            else:  # Reject move
+                                energy_results.append(e_old)
+                                structure_data = old_structure
 
-                        trial_data = pickle.load(trial_structure_data)
-                except EOFError:
-                    pass
-                finally:
-                    new_structure_data.close()
-
-                results_array = np.array(results)
-                average_e = np.average(results_array)
+                energy_results_array = np.array(energy_results)
+                average_e = np.average(energy_results_array)
                 output.write('{},{}\n'.format(beta, average_e))
                 print('beta = {} completed'.format(beta))
                 print('average energy = {} epsilon'.format(average_e))
@@ -182,17 +119,11 @@ class SimAnneal:
 
 def main():
     start_time = time.clock()
-    SimAnneal.anneal(8)
+    # structure_data = go.GoModel.generate_structure()
+    structure_data = rs.RandomStructure.gen_random_structure(16)
+    SimAnneal.anneal(structure_data)
     end_time = time.clock()
     print('time = {}'.format(end_time - start_time))
 
 
-# main()
-
-"""
-Questions for Yan: 
-1: Am I supposed to be generating thousands of structures to move forward? Or should I only be moving the lowest
-energy structure on to the next round? 
-
-2: Can we hardware accelerate these computations? (Mine will take forever and a day to run...)
-"""
+main()
