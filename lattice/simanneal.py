@@ -2,7 +2,6 @@ import gomodel as go
 import montecarlo as mc
 import numpy as np
 import random
-import randomstructure as rs
 import time
 
 OLD_STRUCTURE_DATA = 'data/old_structure_data.dat'
@@ -16,42 +15,41 @@ class SimAnneal:
 
     @staticmethod
     def sweep(bonds, old_structure_data):
+        new_bonds = bonds.copy()
+        bond_change_index = random.randint(0, len(bonds) - 1)
+        direction = mc.MonteCarlo.direction_change(new_bonds[bond_change_index],
+                                                   new_bonds[bond_change_index - 1])
+        new_bonds[bond_change_index] = direction[0]
 
-                    new_bonds = bonds.copy()
-                    bond_change_index = random.randint(0, len(bonds) - 1)
-                    direction = mc.MonteCarlo.direction_change(new_bonds[bond_change_index],
-                                                               new_bonds[bond_change_index - 1])
-                    new_bonds[bond_change_index] = direction[0]
+        # Determine rotation (cw, ccw, flip)
+        rotation = direction[1]
 
-                    # Determine rotation (cw, ccw, flip)
-                    rotation = direction[1]
+        # Adjust the remainder of the bonds
+        for bond_index in range(bond_change_index + 1, len(bonds)):
+            new_bonds[bond_index] = rotation[bonds[bond_index]]
 
-                    # Adjust the remainder of the bonds
-                    for bond_index in range(bond_change_index + 1, len(bonds)):
-                        new_bonds[bond_index] = rotation[bonds[bond_index]]
-
-                    # Build new structure coordinates
-                    x = 0
-                    y = 0
-                    j = 0
-                    x_step = {'u': 0, 'r': 1, 'd': 0, 'l': -1}
-                    y_step = {'u': 1, 'r': 0, 'd': -1, 'l': 0}
-                    new_structure = [(x, y)]
-                    residue_locations = {(x, y): j}
-                    for bond in new_bonds:
-                        x += x_step[bond]
-                        y += y_step[bond]
-                        j += 1
-                        coord = (x, y)
-                        if coord not in new_structure:
-                            new_structure.append(coord)
-                            residue_locations[(x, y)] = j
-                        else:
-                            return old_structure_data[0], old_structure_data[1]
-                    return new_structure, residue_locations
+        # Build new structure coordinates
+        x = 0
+        y = 0
+        j = 0
+        x_step = {'u': 0, 'r': 1, 'd': 0, 'l': -1}
+        y_step = {'u': 1, 'r': 0, 'd': -1, 'l': 0}
+        new_structure = [(x, y)]
+        residue_locations = {(x, y): j}
+        for bond in new_bonds:
+            x += x_step[bond]
+            y += y_step[bond]
+            j += 1
+            coord = (x, y)
+            if coord not in new_structure:
+                new_structure.append(coord)
+                residue_locations[(x, y)] = j
+            else:
+                return old_structure_data[0], old_structure_data[1]
+        return new_structure, residue_locations
 
     @staticmethod
-    def anneal(structure_data):
+    def anneal(structure_data, output_file):
         r = random.uniform(0, 1)
         print('RNG value = {}'.format(r))
 
@@ -59,11 +57,11 @@ class SimAnneal:
         delta = 0.1
 
         # Overwrite old or create new output file
-        output = open('STW59_Simulated_Annealing_Output.csv', 'w')
+        output = open(output_file, 'w')
         output.close()
 
         # Since there are multiple structures, append results to the output file
-        output = open('STW59_Simulated_Annealing_Output.csv', 'a')
+        output = open(output_file, 'a')
 
         # Write structure used to output file
         output.write('Structure: [{}]\n'.format(structure_data[0]))
@@ -84,7 +82,7 @@ class SimAnneal:
                 # For each structure, perform 100 sweeps
                 for sweeps in range(0, 100):
                     # Perform moves at 10 random bonds per structure
-                    for bond_changes in range(0, 10):
+                    for bond_changes in range(0, 1):
                         # Read bonds into a list
                         bonds = []
                         chain_length = len(structure_data[0])
@@ -110,20 +108,18 @@ class SimAnneal:
                 energy_results_array = np.array(energy_results)
                 average_e = np.average(energy_results_array)
                 output.write('{},{}\n'.format(beta, average_e))
-                print('beta = {} completed'.format(beta))
-                print('average energy = {} epsilon'.format(average_e))
-                print()
+
                 beta = (1 + delta) * beta
             output.write('\n')
 
 
 def main():
     start_time = time.clock()
-    # structure_data = go.GoModel.generate_structure()
-    structure_data = rs.RandomStructure.gen_random_structure(16)
+    # structure_data = go.GoModel.generate_structure(0)  # Given compact structure
+    structure_data = go.GoModel.generate_structure(1)  # Different compact structure
     SimAnneal.anneal(structure_data)
     end_time = time.clock()
     print('time = {}'.format(end_time - start_time))
 
 
-main()
+# main()

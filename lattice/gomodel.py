@@ -6,9 +6,12 @@ class GoModel:
         pass
 
     @staticmethod
-    def generate_structure():
-        bonds = ['r', 'r', 'r', 'u', 'l', 'l', 'l', 'u', 'u', 'r', 'd', 'r', 'u', 'r', 'd']  # Given structure
-        # bonds = ['u', 'u', 'u', 'r', 'r', 'r', 'd', 'd', 'd', 'l', 'l', 'u', 'u', 'r', 'd']  # Different test structure
+    def generate_structure(index):
+        if index == 0:
+            bonds = ['r', 'r', 'r', 'u', 'l', 'l', 'l', 'u', 'u', 'r', 'd', 'r', 'u', 'r', 'd']  # Given structure
+        elif index == 1:
+            bonds = ['u', 'u', 'u', 'r', 'd', 'd', 'd', 'r', 'u', 'u', 'u', 'r', 'd', 'd', 'd']  # Different compact structure
+
         x = 0
         y = 0
         j = 0
@@ -56,7 +59,7 @@ def main():
     # structure_data = rs.RandomStructure.gen_random_structure(16)
 
     # Use the pre-defined structure from the assignment
-    structure_data = GoModel.generate_structure()
+    structure_data = GoModel.generate_structure(0)
 
     # Calculate the interaction energy for the structure
     energy = GoModel.calc_energy(structure_data)
