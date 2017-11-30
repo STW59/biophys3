@@ -8,3 +8,5 @@ test/
 /lattice/STW59_Lattice_Output.csv
 /lattice/*.csv
 /lattice/*.dat
+/ProDyTutorial/*.pdb.gz
+*.pdb.gz
